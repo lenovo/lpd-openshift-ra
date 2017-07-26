@@ -1,0 +1,5 @@
+[lenovo-hpc]
+name=Lenovo packages for HPC
+baseurl=http://hpc.lenovo.com/yum/latest/el6/x86_64/
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-LENOVO

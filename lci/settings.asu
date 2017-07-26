@@ -1,0 +1,13 @@
+set DiskGPTRecovery.DiskGPTRecovery None
+set DevicesandIOPorts.Legacy_Ethernet1 Disable
+set DevicesandIOPorts.Legacy_Ethernet2 Disable
+set DevicesandIOPorts.Legacy_Ethernet3 Disable
+set DevicesandIOPorts.Legacy_Ethernet4 Disable
+set DevicesandIOPorts.Legacy_Slot1 Enable
+set DevicesandIOPorts.Legacy_Slot4 Enable
+set DevicesandIOPorts.UEFI_Slot1 Enable
+set BootOrder.BootOrder "PXE Network=Hard Disk 0"
+set DevicesandIOPorts.PCI64-BitResourceAllocation Disable 
+set DevicesandIOPorts.MMConfigBase 3GB
+set Processors.Hyper-Threading Enable
+set OperatingModes.ChooseOperatingMode "Maximum Performance"

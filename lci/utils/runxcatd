@@ -1,0 +1,23 @@
+#!/bin/bash
+
+export PATH=/opt/xcat/bin:/opt/xcat/sbin:/opt/confluent/bin:$PATH
+
+if [ ! -r /etc/profile.d/xcat.sh ]; then
+        echo "xCAT must be installed prior to running this script"
+fi
+. /etc/profile.d/xcat.sh
+
+if [ ! -r /var/run/xcatd.pid ]; then
+  xcatd
+else
+  PID=`cat /var/run/xcatd.pid`
+  if [ -z "$PID" ]; then
+    xcatd
+  else
+    ps $PID|grep xcatd: > /dev/null 2>&1
+    if [ "$?" -ne "0" ]; then
+      xcatd
+    fi
+  fi
+fi
+

@@ -1,0 +1,140 @@
+#!/bin/bash
+# echo $THINKAGILE_CONFIG_FILE
+
+export LESSCHARSET=utf-8
+export HELP_FILE=/lci/lpdeploy_help.txt
+export VERSION_FILE=/lci/cx.version
+export PATH=/opt/xcat/bin:/opt/xcat/sbin:/opt/confluent/bin:$PATH
+export CONFIG_FILE=/shared/lpd_config.txt
+export INVENTORY_FILE=/shared/lpd_inventory.txt
+
+/lci/utils/runxcatd
+
+if [ -n "$THINKAGILE_CONFIG_FILE" ]; then
+  CONFIG_FILE=$THINKAGILE_CONFIG_FILE
+fi
+
+OPTIND=1
+while getopts "i:x:c:p:lhsv" opt; do
+  case "$opt" in
+    h)
+      cat ${HELP_FILE}
+      exit 0
+      ;;
+    v)
+      cat ${VERSION_FILE}
+      exit 0
+      ;;
+    c)
+      export CONFIG_FILE="$OPTARG"
+      echo Using $CONFIG_FILE as config
+      ;;
+    i)
+      nic="$OPTARG"
+      chtab key=targetinterface site.value=${nic}
+      exit 0
+      ;;
+    p)
+      pwd="$OPTARG"
+      chtab key=genpassword site.value=${pwd}
+      exit 0
+      ;;
+    x)
+      ARGS="$OPTARG"
+      r=`$ARGS`
+      echo "$r"
+      exit 0
+      ;;
+    l)
+      LATEST_DIR=$(ls -t /lci/log|head -1)
+      logfile=/lci/log/${LATEST_DIR}/showdata.log
+      if [ ! -e "$logfile" ]; then
+        echo Most recent run failed - no inventory generated
+        exit 0
+      fi
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep switch|awk '{print $2 " \tansible_host="$1 " \tansible_user=admin"}'`
+      touch $INVENTORY_FILE
+
+      echo "[ocp-network]" > $INVENTORY_FILE
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-imm]" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep IMM|awk '{print $2 " \tansible_host="$1 " \tansible_user=USERID"}'`
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-management]" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep mgmt|awk '{print $2 " \tansible_host="$1 " \tansible_user=USERID"}'`
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-compute]" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep "app"|grep -v IMM|grep -v "mgmt"|awk '{print $2 " \tansible_host="$1 " \tansible_user=atomic"}'`
+      echo "$log" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep "infra"|grep -v IMM|grep -v "mgmt"|awk '{print $2 " \tansible_host="$1 " \tansible_user=atomic"}'`
+      echo "$log" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep "master"|grep -v IMM|grep -v "mgmt"|awk '{print $2 " \tansible_host="$1 " \tansible_user=atomic"}'`
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-testbed:children]" >> $INVENTORY_FILE
+      echo "ocp-network" >> $INVENTORY_FILE
+      echo "ocp-imm" >> $INVENTORY_FILE
+      echo "ocp-management" >> $INVENTORY_FILE
+      echo "ocp-compute" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-infra]" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep -v IMM|grep -v "mgmt"|grep 'infra'|awk '{print $2}'`
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-app]" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep -v IMM|grep -v "mgmt"|grep 'app'|awk '{print $2}'`
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp-master]" >> $INVENTORY_FILE
+      log=`cat $logfile|awk 'NR == 1, /\/etc\/hosts:/ {next} {print}'|grep -v IMM|grep -v "mgmt"|grep 'master'|awk '{print $2}'`
+      echo "$log" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+
+      echo "[ocp:children]" >> $INVENTORY_FILE
+      echo "ocp-app" >> $INVENTORY_FILE
+      echo "ocp-infra" >> $INVENTORY_FILE
+      echo "ocp-master" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+      
+      echo "[ocp:vars]" >> $INVENTORY_FILE
+      txt='ansible_ssh_user=root'
+      echo "$txt" >> $INVENTORY_FILE
+      txt='deployment_type=atomic-openshift'
+      echo "$txt" >> $INVENTORY_FILE
+      txt="openshift_infra_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/infra/htpasswd'}]"
+      echo "$txt" >> $INVENTORY_FILE
+      printf "\n" >> $INVENTORY_FILE
+      
+      printf "\n"
+      cat "$INVENTORY_FILE"
+      printf "\nSaving inventory file to $INVENTORY_FILE ... Done\n" 
+      exit 0
+      ;;
+    s)
+      LATEST_DIR=$(ls -t /lci/log|head -1)
+      logfile=/lci/log/${LATEST_DIR}/showdata.log
+      log=`cat $logfile`
+      echo "$log"
+      exit 0
+      ;;
+    '?')
+      cat ${HELP_FILE}
+      exit 0
+      ;;
+  esac
+done
+shift "$((OPTIND-1))"
+
+chtab key=configfile site.value=${CONFIG_FILE}
+CONFIG_FILE=$CONFIG_FILE /lci/lcideploy
+

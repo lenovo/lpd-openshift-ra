@@ -1,0 +1,27 @@
+#!/bin/bash
+export PATH=/opt/xcat/bin:/opt/xcat/sbin:/opt/confluent/bin:$PATH
+
+/lci/utils/runxcatd
+
+# Default number of nodes to confiure is 16
+NODES_TO_CONFIGURE=1
+# Default rack size is 42
+RACK_SIZE=42
+PROD_NAME='ocp.example.local'
+PROD_TYPE='cx'
+FIRST_NODE=5
+LAST_NODE=5
+OS_TYPE=rhel7s
+
+NODES_TO_CONFIGURE=$((LAST_NODE-FIRST_NODE+1))
+chtab key=racksize site.value=$RACK_SIZE
+chtab key=numnodeswanted site.value=$NODES_TO_CONFIGURE
+chtab key=prodname site.value=${PROD_NAME}
+chtab key=prodtype site.value=${PROD_TYPE}
+chtab key=firstnode site.value=${FIRST_NODE}
+chtab key=lastnode site.value=${LAST_NODE}
+chtab key=ostype site.value=${OS_TYPE}
+chtab key=configfile site.value=${CONFIG_FILE}
+
+tmux set-option -g history-limit 50000 \; new-session "`dirname $0`/lcideploy.sh"
+# tmux set-option -g history-limit 50000 \; new-session "NODES_TO_CONFIGURE=$NODES_TO_CONFIGURE `dirname $0`/lcideploy.sh"

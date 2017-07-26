@@ -1,0 +1,20 @@
+
+Lenovo Platform Deployer is a management tool which provides a simple interface to 
+configure and deploy OS/Apps to a Lenovo ThinkAgile(TM) platform.
+
+Usage: lpdeploy [-c <file> ]   Configure and deploy the target using <file> as input if specified.
+                                 Otherwise, use the file in the THINKAGILE_CONFIG environment variable.
+                -i <interface> Use the network interface on the Deployer host to configure
+                -h/-?          Print this help
+                -v             Display the current Deployer version
+                -l             List/generate an ansible inventory file to /shared/lpd_inventory.txt
+                -x <cmd>       Execute a (xcat) command
+                -s             Show the setup info from the previous run
+                -p <passwd>    Set the default password (no deploy)
+
+Examples:
+>lpdeploy 
+>lpdeploy -c /shared/lpd_config.txt
+>lpdeploy -i eno2
+>lpdeploy -x "lsdef hosts"
+

@@ -1,0 +1,7 @@
+#node,switch,port
+app,gswitch1,|($1)|
+app,gswitch1,|($1+22)|
+infra,gswitch1,|($1+6)|
+infra,gswitch1,|($1+28)|
+master,gswitch1,|($1+8)|
+master,gswitch1,|($1+30)|

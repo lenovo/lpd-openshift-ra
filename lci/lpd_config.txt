@@ -1,0 +1,4 @@
+# first_node last_node os_type(rhels7/rhela7) node_nic node_type(app/infra/master)
+1 6 rhela7 1 app 
+7 8 rhels7 1 infra 
+9 11 rhela7 1 master 
